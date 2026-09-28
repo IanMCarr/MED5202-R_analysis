@@ -332,7 +332,7 @@ This opens a PNG file called VolcanoPlot.png (but doesn't save it to disk). Next
     lab = rownames(res),  
     title = "siCK4 v control",  
     subtitle = "DESeq2 Differential Expression",  
-    caption = bquote(~Log[2]~ "fold change cutoff:   2,  
+    caption = bquote(\~Log[2]\~ "fold change cutoff:   2,  
     padj cutoff:   0.05"),  
     pCutoff = 0.05,  
     FCcutoff = 1,  
