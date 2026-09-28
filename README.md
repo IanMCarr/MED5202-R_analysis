@@ -1,10 +1,94 @@
 # MED5202-Tut
 ## Bioinformatics for MED5202 - RNAseq analysis
 
+## Introduction
+
+The analysis of RNA-seq data consists of three steps:
+1.	Creating a read count table – quality trimming reads, aligning them to a genome and counting reads mapping to each gene, transcript or exon.
+2.	Performing statistical analysis of the read count data to identify differentially expressed features and then reporting the results as text and graphics.
+3.	Interpreting the results to determine what work needs doing to validate them and create new hypotheses to test.
+Today you'll be doing a simplified version of step 2 using R with some data from an experiment that looked at the effect of suppressing the expression of CDK4 using an siRNA. This gene is involved in controlling cellular division, so is important in cancer. The tutorial will consist of 3 steps:  
+
+     1. Setting up R and Rstudio on your computer and installing the packages needed to do the analysis.  
+    2. Doing the analysis.  
+    3. Saving the results as text and graphics files.  
+
+
+## 1. Setting up R and RStudio
+
+Setting up R and RStudio should be easy (but may turn ugly...), how they are downloaded and installed depends on whether it's your PC or a University cluster computers, but before setting up R and RStudio, you need to make a folder to do the analysis in.
+
+### 1.1 Making the required folders
+Go to your ‘Documents’ folder and create a new folder called something like ‘MyWorkArea’ - it's best to use a descriptive name with no spaces in it. This folder is where all the files are saved too. Once you have created the folder, create a 2nd folder in it called ‘R’ (Figure 1.1). 
+
+![Figure 1.1](images/figure1.1.jpg)
+
+Figure 1.1
+
+Next, download the ‘gene_counts.txt’ file from this GitHub’s Data folder and put it in the  ‘MyWorkArea’ folder. 
+
+- Look at the top of this webpage to find the 'Data' folder (blur box in Figure 1.2).
+
+![Figure 1.2](images/figure1.2.jpg)
+
+Figure 1.2
+
+- Click on the 'gene_counts.txt' text (blue box in Figure 1.3).
+
+![Figure 1.3](images/figure1.3.jpg)
+
+Figure 1.3
+
+- You then download the file by clicking on the 'Download' icon in the upper-right of the webpage (blue box in Figure 1.4).
+
+![Figure 1.4](images/figure1.4.jpg)
+
+Figure 1.4
+
+### 1.2 Installing R and RStudio
+How you install R and RStudio depends on whether the computer is yours and you have admin permissions or whether it is a university cluster computer that uses AppsAnywhere.
+
+#### UoL PC and AppsAnywhere
+
+Go to the University of Leeds’ AppsAnywhere website: https://appsanywhere.leeds.ac.uk/login. Log on and then select the "__R for windows 4.6.1__" and "__RStudio__". Then use the AppsAnywhere program on the cluster PC to start and run R and RStudio (start R first).
+
+#### Personal PC with admin rights
+
+If you are using your own laptop, this is just a matter of downloading and installing R and RStudio.
+
+___Note: It's best to install R first, followed by RStudio.___
+
+- Downloading R  
+R is hosted by the CRAN project at this URL: [https://cran.r-project.org/](https://cran.r-project.org/).Go to the website and download the correct R program for your operating system.  
+- Downloading R Studio    
+RStudio is a program that provides a rich user interface for working with R and comes as either a desktop program or a webserver. You want the desktop version which, can be downloaded from: https://docs.posit.co/ide/user/#rstudio-ide-oss-downloads. Download and install as you would any program.
+
+### 1.3 The RStudio user interface
+
+When RStudio starts, it displays a single window containing three panels (Figure 1.5). The large panel on the left (blue rectangle in Figure 1.5) is where you issue commands. The smaller panel on the upper right (red rectangle in Figure 1.5)  is where RStudio lists all the items it is working with. Finally, the  smaller lower right-hand panel lists various things, such as installed packages.
+
+![Figure 1.5](images/figure1.5.jpg)
+
+Figure 1.5: The blue, black and red rectangles identify each panel;  
+- Blue rectangle – this is where each command is entered
+- Red rectangle - this panel displays a list of all variables R is using.
+- Green rectangle - this is the panel that shows a list of all the programs/packages that R is currently using.
+
+___For this tutorial you'll type text into the left-hand panel___
+
+### 1.4 An important point on file paths
+
+When you refer to a file or folder in text, R expects the names of folders and files to be separated by a slash character. On Macs and Linux PCs the slash is a forward slash - "/", while on Windows PCs its a back slash - "\\". In programming, the back slash has other uses and for R, it must be changed to a forward slash or two back slashes:
+- __“D:\\aFolder\\aSubfolder\R”__ -> __“D:/aFolder/aSubfolder/R”__
+- __“D:\\aFolder\aSubfolder\R”__ -> __“D:\\\\aFolder\\\\aSubfolder\\\\R”__
+
+
 ## 2. Downloading R packages
-The RNA-seq statistical analysis will be performed using DESeq2, which is an R package that is very much like a normal program running in Windows, but the package runs inside an R environment. Like any computer program, you need to tell the environment where to put its files. I use __“D:  /OneDrive - University of Leeds/MyWorkArea/R”__, but this will only work for me, so you need to change this to the location of your R folder you made earlier. In this document and the script, this location will be referenced by __\<R library>__. When you see this text, you need to replace it with the location of your R library.
+The RNA-seq statistical analysis will be performed using DESeq2, which is an R package that is very much like a normal program running on Windows, except the package runs inside an R environment. Like any computer program, you need to tell the environment where to put its files. I use __“D:\\OneDrive - University of Leeds\\MyWorkArea\R”__, but this will only work for me, so you need to change this to the location of your R folder you made earlier. In this document and the script, this location will be referenced by __\<R library>__. When you see this text, you need to replace it with the location of your R library.
  The location of your R library folder is set by:    
 > .libPaths("__\<R library>__")  
+
+___Note: Remember the note in section 1.4 about the slashes in a file's path.___
 
 There are a number of websites that distribute R packages, you will use Bioconductor, which is like an app store for bioinformatics R packages. To install packages from Bioconductor, you need to install BiocManager with the following commands:   
 
@@ -13,19 +97,18 @@ There are a number of websites that distribute R packages, you will use Biocondu
 }    
 library(BiocManager)
 
-
 __Note__: Change __\<R library>__ to your folder.    
 The statement after the ‘if’ checks whether BiocManager is already in the library folder. If it is, R does nothing. If it isn’t, R downloads all the required code and makes the package in your library folder. BiocManager is loaded for you to use with the library(BiocManager) command.
 Next you need to get the DESeq2 program using this set of commands:    
 
 > if (!requireNamespace("DESeq2", quietly = TRUE)) {  
-    BiocManager:  :  install(c("DESeq2", "GenomicRanges"), lib = "__\<R library>__")  
+    BiocManager::install(c("DESeq2", "GenomicRanges"), lib = "__\<R library>__")  
 }  
 library(DESeq2)  
 
 __Note__:   change __\<R library>__ to your folder.  
 As before, the statement after the ‘if’ checks if DESeq2 is already in the library folder. If it isn’t it the commands in the curly brackets runs which downloads and builds DESeq2 in your R library folder.  
-If you look in the R library folder before executing these commands, the folder is empty. However, after the commands it will contain a DESeq2 folder plus all the other packages DESeq2 needs to work. This step may take a while to run. If you look in the ‘Packages’ tab of the lower left-hand panel, you should see DESeq2 along with it dependencies like GenomicRanges.
+If you look in the R library folder before executing these commands, the folder is empty. However, after the commands it will contain a DESeq2 folder plus all the other packages DESeq2 needs to work. This step may take a while to run. If you look in the ‘Packages’ tab of the lower left-hand panel (Figure 2.1), you should see DESeq2 along with it dependencies like GenomicRanges.
 To allow R to use DESeq2, you have to load it using the library(DESeq2)command. 
 library(DESeq2)
 
@@ -56,7 +139,7 @@ Now all the files will be created in this folder, unless if a specific location 
 
 Finally, you need to reference the file that contains the red count data. This location is stored in the rSubReadFile variable with:  
 
-> rSubReadFile <- file.path(workFolder, "__gene__counts_.txt__")
+> rSubReadFile <- file.path(workFolder, "__gene_counts.txt__")
 
 Since the ‘__gene__counts_.txt__’ file is in the working folder, you can use’ file.path’ function to combine the two pieces of text.
 
