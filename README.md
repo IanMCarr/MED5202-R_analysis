@@ -203,8 +203,10 @@ If you look at it, you’ll see that it contains a lot of data that you don’t 
 > columnsFromDataFile <- c(16, 17, 18, 19, 20, 21)
 
 This command makes a special variable called either a vector. In this case the variable points to 6 different numbers. If you type the variable’s name and press ‘enter’, you get:  
+
 > columnsFromDataFile 
-[1] 16 17 18 19 20 21
+[1] 16 17 18 19 20 21  
+
 If you want to reference the third value (remember to count from 0), you type:  
 
 > columnsFromDataFile[1]  
@@ -277,7 +279,7 @@ Table 1.
 
 The following commands, rename the columns in the _counts_ matrix (first command) and the second command will give the rows in the sampleTable row names (Table 2).  
 
-> colnames(_counts_) <- sampleTable$sample
+> colnames(_counts_) <- sampleTable$sample  
 > rownames(sampleTable) <- sampleTable$sample  
 
 
@@ -358,7 +360,7 @@ write.csv(as.data.frame(resSig), file = "standard_analysis_Deseq2_significant_05
 While you have now completed the differential expression analysis, it is standard practice to produce some pictures that summarise the results. One type of graphic is the volcano plot, which graphs the sequences’ p-value against their change in expression. A widely used package for drawing volcano plots in R is the EnhancedVolcano package. This is downloaded from Bioconductor in the same way you got the DESeq2 package:  
 
 >if (!requireNamespace("EnhancedVolcano", quietly = TRUE)) {  
-    BiocManager:  :  install("EnhancedVolcano", lib = library)  
+    BiocManager::install("EnhancedVolcano", lib = library)  
 }  
 library(EnhancedVolcano)  
 
@@ -501,4 +503,49 @@ Figure 9.1: The Heatmap.
 ---
 
 
+> if(!require("clusterProfiler", quietly = TRUE)){  
+  BiocManager::install("clusterProfiler", lib = library)  
+}  
+library("clusterProfiler")  
 
+Spieces <-"org.Hs.eg.db"
+if (!require(org.Hs.eg.db))
+{
+	BiocManager::install("org.Hs.eg.db")
+}
+library("org.Hs.eg.db")
+ 
+
+> toName <- as.data.frame(resSig)  
+toName$RefSeq<-rownames(toName)  
+head(toName)  
+
+> sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)    
+mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)    
+write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))  
+
+
+png("VolcanoPlot_no_labels.png")
+ EnhancedVolcano(res,
+    lab = c(''),
+	title = fileBaseName,
+	subtitle = "DeSeq2 Differential expression",
+    caption = bquote(~Log[2]~ "fold change cutoff: 2, padj -value cutoff: 0.05"),
+	pCutoff = 0.05,
+    FCcutoff = 1,
+    x = 'log2FoldChange',
+    y = 'padj',
+	col=c('black', 'black', 'black', 'red3'),
+    colAlpha = 1)
+dev.off()
+
+pcaData <- plotPCA(nt, intgroup=c("condition", "sample"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+png("R.png")
+ggplot(pcaData, aes(PC1, PC2, color=condition)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed() + 
+  ggtitle("PCA plot: condition")
+dev.off()#
