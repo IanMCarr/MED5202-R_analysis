@@ -117,14 +117,14 @@ Which is R telling you what is in the variable.
 
 Using the _library_ variable to set your library location use:  
     
-> .libPaths(library")  
+> .libPaths(library)  
 
 ___Note: Remember the note in section 1.4 about the slashes in a file's path.___
 
 There are a number of websites that distribute R packages, you will use Bioconductor, which is like an app store for bioinformatics R packages. To install packages from Bioconductor, you need to install BiocManager with the following commands:   
 
 > if (!requireNamespace("BiocManager", quietly = TRUE)) {    
-    install.packages("BiocManager", lib = "__\<R library>__")    
+    install.packages("BiocManager", lib = library)    
 }    
 library(BiocManager)
 
@@ -358,11 +358,9 @@ write.csv(as.data.frame(resSig), file = "standard_analysis_Deseq2_significant_05
 While you have now completed the differential expression analysis, it is standard practice to produce some pictures that summarise the results. One type of graphic is the volcano plot, which graphs the sequences’ p-value against their change in expression. A widely used package for drawing volcano plots in R is the EnhancedVolcano package. This is downloaded from Bioconductor in the same way you got the DESeq2 package:  
 
 >if (!requireNamespace("EnhancedVolcano", quietly = TRUE)) {  
-    BiocManager:  :  install("EnhancedVolcano", lib = "__\<R library>__")  
+    BiocManager:  :  install("EnhancedVolcano", lib = library)  
 }  
 library(EnhancedVolcano)  
-
-Remember to change "__\<R library>__" for the location of your R library folder.  
 
 So far you have produced data that can be saved as text, but creating pictures has to be done in a different way. In R pictures are drawn on a ‘device’, which is something that can store a picture's data. Since you are saving the picture to file, you’ll make a new device for each image. A typical image file format is the PNG, so you make and open a PNG file with:  
 
@@ -430,11 +428,9 @@ The nt variable contains the normalised data of all sequence, which is then filt
 Now you have the data, you can download the pheatmap package which will draw the heatmap.  
 
 >if (!requireNamespace("pheatmap", quietly = TRUE)) {  
-    install.packages("pheatmap", lib = "__\<R library>__")  
+    install.packages("pheatmap", lib = library)  
 }  
 library(pheatmap)  
-
-__Remember__ to change "__\<R library>__" for the location of your R library folder.  
 
 As with the volcano plot, you draw the graph to a PNG file with:  
 
