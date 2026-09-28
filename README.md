@@ -3,20 +3,21 @@
 
 ## Introduction
 
-The analysis of RNA-seq data consists of three steps:
+RNA-seq data analysis consists of three steps:
 1.	Creating a read count table – quality trimming reads, aligning them to a genome and counting reads mapping to each gene, transcript or exon.
 2.	Performing statistical analysis of the read count data to identify differentially expressed features and then reporting the results as text and graphics.
-3.	Interpreting the results to determine what work needs doing to validate them and create new hypotheses to test.
+3.	Interpreting the results to determine what work needs doing to validate them and create new hypotheses to test.  
+
 Today you'll be doing a simplified version of step 2 using R with some data from an experiment that looked at the effect of suppressing the expression of CDK4 using an siRNA. This gene is involved in controlling cellular division, so is important in cancer. The tutorial will consist of 3 steps:  
 
-     1. Setting up R and Rstudio on your computer and installing the packages needed to do the analysis.  
+    1. Setting up R and RStudio on your computer and installing the packages needed to do the analysis.  
     2. Doing the analysis.  
     3. Saving the results as text and graphics files.  
 
 
 ## 1. Setting up R and RStudio
 
-Setting up R and RStudio should be easy (but may turn ugly...), how they are downloaded and installed depends on whether it's your PC or a University cluster computers, but before setting up R and RStudio, you need to make a folder to do the analysis in.
+Setting up R and RStudio should be easy, how they are downloaded and installed depends on whether it's your PC or a University cluster computers, but before setting up R and RStudio, you need to make a folder to do the analysis in.
 
 ### 1.1 Making the required folders
 Go to your ‘Documents’ folder and create a new folder called something like ‘MyWorkArea’ - it's best to use a descriptive name with no spaces in it. This folder is where all the files are saved too. Once you have created the folder, create a 2nd folder in it called ‘R’ (Figure 1.1). 
@@ -24,6 +25,8 @@ Go to your ‘Documents’ folder and create a new folder called something like 
 ![Figure 1.1](images/figure1.1.jpg)
 
 Figure 1.1
+
+---
 
 Next, download the ‘gene_counts.txt’ file from this GitHub’s Data folder and put it in the  ‘MyWorkArea’ folder. 
 
@@ -33,17 +36,23 @@ Next, download the ‘gene_counts.txt’ file from this GitHub’s Data folder a
 
 Figure 1.2
 
+---
+
 - Click on the 'gene_counts.txt' text (blue box in Figure 1.3).
 
 ![Figure 1.3](images/figure1.3.jpg)
 
 Figure 1.3
 
+---
+
 - You then download the file by clicking on the 'Download' icon in the upper-right of the webpage (blue box in Figure 1.4).
 
 ![Figure 1.4](images/figure1.4.jpg)
 
 Figure 1.4
+
+---
 
 ### 1.2 Installing R and RStudio
 How you install R and RStudio depends on whether the computer is yours and you have admin permissions or whether it is a university cluster computer that uses AppsAnywhere.
@@ -74,6 +83,8 @@ Figure 1.5: The blue, black and red rectangles identify each panel;
 - Red rectangle - this panel displays a list of all variables R is using.
 - Green rectangle - this is the panel that shows a list of all the programs/packages that R is currently using.
 
+---
+
 ___For this tutorial you'll type text into the left-hand panel___
 
 ### 1.4 An important point on file paths
@@ -84,9 +95,29 @@ When you refer to a file or folder in text, R expects the names of folders and f
 
 
 ## 2. Downloading R packages
-The RNA-seq statistical analysis will be performed using DESeq2, which is an R package that is very much like a normal program running on Windows, except the package runs inside an R environment. Like any computer program, you need to tell the environment where to put its files. I use __“D:\\OneDrive - University of Leeds\\MyWorkArea\R”__, but this will only work for me, so you need to change this to the location of your R folder you made earlier. In this document and the script, this location will be referenced by __\<R library>__. When you see this text, you need to replace it with the location of your R library.
- The location of your R library folder is set by:    
-> .libPaths("__\<R library>__")  
+The RNA-seq statistical analysis will be performed using DESeq2, which is an R package that is very much like a normal program running on Windows, except the package runs inside an R environment. Like any computer program, you need to tell the environment where to put its files. I use __“D:\\OneDrive - University of Leeds\\MyWorkArea\R”__, but this will only work for me, so you need to change this to the location of your R folder you made earlier. In this document and the script, this location will be referenced multiple times and so rather than type the folders location in multiple times you'll reference it with a variable called "__library__".
+
+A variable is a place in your computer's memory that is referenced by its name in a script. So __"library"__ (with speech marks) is just text and a program will see it as just text, but __library__ (without speech marks) is a variable's name and the script will look in your computer's memory for what it means/represent. Before you can use a variable you have to declare it. To declare variable that holds text you use:
+
+> _library_ \<- "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\R"    
+
+or   
+
+> _library_ = "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\\R" 
+
+If you now type:
+
+> _library_   
+
+and then press enter you'll get:
+
+> [1] "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\\R"
+
+Which is R telling you what is in the variable.
+
+Using the _library_ variable to set your library location use:  
+    
+> .libPaths(library")  
 
 ___Note: Remember the note in section 1.4 about the slashes in a file's path.___
 
@@ -97,16 +128,18 @@ There are a number of websites that distribute R packages, you will use Biocondu
 }    
 library(BiocManager)
 
-__Note__: Change __\<R library>__ to your folder.    
+__Note__ the use of the _library_ variable.    
 The statement after the ‘if’ checks whether BiocManager is already in the library folder. If it is, R does nothing. If it isn’t, R downloads all the required code and makes the package in your library folder. BiocManager is loaded for you to use with the library(BiocManager) command.
 Next you need to get the DESeq2 program using this set of commands:    
 
 > if (!requireNamespace("DESeq2", quietly = TRUE)) {  
-    BiocManager::install(c("DESeq2", "GenomicRanges"), lib = "__\<R library>__")  
+    BiocManager::install(c("DESeq2", "GenomicRanges"), lib =library)  
 }  
 library(DESeq2)  
 
-__Note__:   change __\<R library>__ to your folder.  
+__Note__ the use of the _library_ variable. 
+
+
 As before, the statement after the ‘if’ checks if DESeq2 is already in the library folder. If it isn’t it the commands in the curly brackets runs which downloads and builds DESeq2 in your R library folder.  
 If you look in the R library folder before executing these commands, the folder is empty. However, after the commands it will contain a DESeq2 folder plus all the other packages DESeq2 needs to work. This step may take a while to run. If you look in the ‘Packages’ tab of the lower left-hand panel (Figure 2.1), you should see DESeq2 along with it dependencies like GenomicRanges.
 To allow R to use DESeq2, you have to load it using the library(DESeq2)command. 
@@ -116,16 +149,18 @@ library(DESeq2)
 
 Figure 2.1 List of installed R packages. The tick indicates the package is loaded, ready to use.
 
+---
+
 ## 3. Working Folder Setup
-You now need to tell R where to find any data files and where to write any results files. This folder is called the __“Working Folder”__. Rather than repeatedly typing the location of this folder, you will save it as a variable. Variables are a place in a computer’s memory that can be accessed via a name. So, when that name appears in a script, R doesn’t use the name, it uses the information that that name references in the memory. To set a variable that contains the location of your working folder, use this command:  
+You now need to tell R where to find any data files and where to write any results files. This folder is called the __“Working Folder”__. Rather than repeatedly typing the location of this folder, you will save it as the _workFolder_ variable. To declare this variable with the location of your working folder, use this command:  
 > workFolder <- "your/MyWorkArea"  
 
 where you substitute "your/MyWorkArea" with the location of the working folder you made earlier, such as:    
 
-> workFolder <- "D:  /OneDrive - University of Leeds/MyWorkArea"  
+> workFolder <- "D:/OneDrive - University of Leeds/MyWorkArea"  
 
-Once you have created this variable, typing its name and pressing ‘enter’ instruction R to write the variables contents on the next line:  
-> workFolder <press enter>  
+Once you have created this variable, typing its name and pressing ‘Enter’ instructs R to write the variables contents on the next line:  
+> workFolder  
 [1] "D:  /OneDrive - University of Leeds/MyWorkArea"  
 
 To set this location as the working environment, it’s a good idea to check that the folder exists, and if not, make it. This is done with this command:   
@@ -148,7 +183,7 @@ So far you have just set up the R environment, now you will actually do somethin
 
 > _counts_ <- read.delim(rSubReadFile)  
 
-Reading the data will take a moment and result in the creation of a new variable – _‘_counts_’_. This variable isn’t like the ones you have made so far, its data is stored as if it were an Excel spreadsheet – it has rows and columns. This type of variable is called a “dataframe” and consequently, it is listed in a different part of the upper-hand panel (Figure 4.4). 
+Reading the data will take a moment and result in the creation of a new variable – _‘_counts_’_. This variable isn’t like the ones you have made so far, its data is stored as if it were an Excel spreadsheet – it has rows and columns. This type of variable is called a “Data Frame” and consequently, it is listed in a different part of the upper-hand panel (Figure 4.4). 
 
 ![Figure 4.1](images/Figure4.1.jpg)
 
@@ -160,6 +195,8 @@ Double-clicking on it will cause the left-hand panel to split in two, with the u
 ![Figure 4.2](images/Figure4.2.jpg)
 
 Figure 4.2: Double-clicking on a complex variable will open it in the upper half of the left-hand panel.
+
+---
 
 If you look at it, you’ll see that it contains a lot of data that you don’t need, such as the genomic coordinates of each transcript’s exons, as well as data for samples you will not use. The data columns you need are 17, 18, 19, 20, 21 and 21. However, in computing you count from 0 and not 1, so the columns you need to tell R to keep are 16, 17, 18, 19, 20 and 21. This filtering is done with this command: 
 
@@ -184,6 +221,8 @@ This overwrites the original _counts_ variable with a new matrix variable that o
 
 Figure 4.3: The _counts_ variable now holds only the data you want.
 
+---
+
 Since the _counts_ data came from a text file, it’s best to explicitly tell R that the values are numbers. This is done with:   
 
 > storage.mode(_counts_) <- "integer"  
@@ -194,6 +233,8 @@ Once this command has been completed, the _counts_ variable will no longer conta
 ![Figure 4.4](images/Figure4.4.jpg)]
 
 Figure 4.4: The _counts_ variable now holds only whole numbers.
+
+---
 
 When analysing read count data, many sequences have very few read reads as they are not expressed. While it is possible to process these sequences, their result is very unlikely to be statistically significant and so you exclude them with:   
 
@@ -261,6 +302,8 @@ This command sets up the DESeq2 analysis by creating the dds large dataset (Figu
 ![Figure 6.1](images/Figure6.1.jpg)
 
 Figure 6.1: The creation of the DESeq2 data object (blue line).
+
+---
 
 You will also get a warning because the items in the conditionlevel vector have been put in alphabetical order, which may be different from what you want. This is corrected with:  
 
@@ -366,6 +409,8 @@ A file called VolcanoPlot.png should now appear in your working folder (Figure 6
 
 Figure 6.1: The volcano plot
 
+---
+
 ## 8. Heatmap of Significantly Altered Transcripts
 Another type of graphic used to summarise a differential expression analysis is the heatmap. They create an image which contains a column for each sample and draws each transcript down each column. In the heatmap you’ll draw, the samples and transcripts are clustered, so similar samples are drawn close to each other and very similar transcripts are drawn next to each other.  
 Before you can draw the heatmap, you have to prepare the data. The expression dataset is made of thousands of transcripts and trying to draw all of them may require more memory than your PC has. Consequently, people only use the sequences that are significantly different. This is done with:  
@@ -430,6 +475,8 @@ When the heapmap has been drawn, it is saved to a file with:
 
 Figure 8.1: The Heatmap.
 
+---
+
 ## 9. Principal Component Analysis (PCA) Visualisation
 
 PCA plots are graphs that condense the differences between a set of samples into two values. The first one (PCA1) should describe the most variation and the second one (PCA2) less. Hopefully, PCA1 will be large and PCA2 will be small, with the ‘Control’ samples on one side of the graph and the siCK4 samples on the other side.  
@@ -454,4 +501,8 @@ and then save the file with:
 ![Figure 9.1](images/PCA.png)
 
 Figure 9.1: The Heatmap.
+
+---
+
+
 
