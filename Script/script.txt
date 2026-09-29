@@ -5,6 +5,7 @@ library <- "Your/library/folder"
 workFolder <- "your/MyWorkArea"
 
 library <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\R"
+workFolder <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\R"
 .libPaths(library)
 
 
@@ -143,3 +144,23 @@ coord_fixed() +
 ggtitle("PCA plot: condition")
 dev.off()
 
+
+if(!require("clusterProfiler")){
+  BiocManager::install("clusterProfiler")
+}
+library("clusterProfiler")
+
+
+if (!require(org.Hs.eg.db))
+{
+                BiocManager::install("org.Hs.eg.db")
+}
+library("org.Hs.eg.db")
+
+toName <- as.data.frame(resSig)
+rownames(toName) <- gsub("\\..*", "", rownames(toName))
+toName$RefSeq<-rownames(toName)
+
+sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)
+mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)
+write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))
