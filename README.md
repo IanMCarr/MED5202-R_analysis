@@ -503,24 +503,6 @@ Figure 9.1: The Heatmap.
 ---
 
 
-> if(!require("clusterProfiler", quietly = TRUE)){  
-  BiocManager::install(c("clusterProfiler", "enrichplot"), dependencies = TRUE, force = TRUE, lib = library)  
-}  
-library("clusterProfiler")  
-
-> if (!require(org.Hs.eg.db)) {  
-	BiocManager::install("org.Hs.eg.db")  
-}  
-library("org.Hs.eg.db")  
- 
-
-> toName <- as.data.frame(resSig)  
-toName$RefSeq<-rownames(toName)  
-head(toName)  
-
-> sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)    
-mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)    
-write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))  
 
 
 png("VolcanoPlot_no_labels.png")  
@@ -549,3 +531,24 @@ ggplot(pcaData, aes(PC1, PC2, color=condition)) +
   coord_fixed() +   
   ggtitle("PCA plot: condition")  
 dev.off()#
+
+
+
+> if(!require("clusterProfiler", quietly = TRUE)){  
+  BiocManager::install(c("clusterProfiler", "enrichplot"), dependencies = TRUE, force = TRUE, lib = library)  
+}  
+library("clusterProfiler")  
+
+> if (!require(org.Hs.eg.db)) {  
+	BiocManager::install("org.Hs.eg.db")  
+}  
+library("org.Hs.eg.db")  
+ 
+
+> toName <- as.data.frame(resSig)  
+toName$RefSeq<-rownames(toName)  
+head(toName)  
+
+> sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)    
+mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)    
+write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))  
