@@ -2,7 +2,7 @@
 ## 1. Define libraries
 ## ------------------------------------------------------------
 
-local_lib <- file.path(Sys.getenv("LOCALAPPDATA"), "R", 
+local_lib <- file.path(Sys.getenv("LOCALAPPDATA"), "R",
                        paste0("win-library/", getRversion()[1,1:2]))
 external_lib <- "D:/OneDrive - University of Leeds/MyWorkArea/R"
 
@@ -37,13 +37,19 @@ BiocManager::install(
 )
 
 ## ------------------------------------------------------------
-## 5. Install DESeq2 (also into local library)
+## 5. Install DESeq2 + clusterProfiler + org.Hs.eg.db
 ## ------------------------------------------------------------
 
-BiocManager::install("DESeq2", lib = local_lib)
+BiocManager::install(
+  c("DESeq2", "clusterProfiler", "org.Hs.eg.db"),
+  lib = local_lib,
+  update = TRUE
+)
 
 ## ------------------------------------------------------------
-## 6. Load DESeq2 normally
+## 6. Load packages
 ## ------------------------------------------------------------
 
 library(DESeq2)
+library(clusterProfiler)
+library(org.Hs.eg.db)

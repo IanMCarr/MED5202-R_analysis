@@ -502,53 +502,115 @@ Figure 9.1: The Heatmap.
 
 ---
 
+## 10. Optional images
 
+In section [7. Volcano Plot Visualisation](#7-volcano-plot-visualisation) you created a volcano plot with some data point labeled and the different class of sequences coloured red, blue, green and grey. The code fragment will draw the same volcano plot without any data point labels. All the data points are black except those with a significant p-value and change in expression that are red (Figure 10.1).
 
+> png("VolcanoPlot_no_labels.png")  
 
-png("VolcanoPlot_no_labels.png")  
-
- EnhancedVolcano(res,  
+> EnhancedVolcano(res,  
     lab = c(''),  
 	title = "Volcano plot",  
 	subtitle = "DeSeq2 Differential expression",  
-    caption = bquote(\~Log[2]\~ "fold change cutoff: 2, padj -value cutoff: 0.05"),  
+    caption = bquote(\~Log[2]\~ "fold change cutoff: 2,   
+    padj -value cutoff: 0.05"),  
 	pCutoff = 0.05,  
     FCcutoff = 1,  
     x = 'log2FoldChange',  
     y = 'padj',  
 	col=c('black', 'black', 'black', 'red3'),  
     colAlpha = 1)  
-dev.off()
 
-pcaData <- plotPCA(nt, intgroup=c("condition", "sample"), returnData=TRUE)  
-percentVar <- round(100 * attr(pcaData, "percentVar"))  
+> dev.off()
 
-png("PCAPlot_plus.png")    
+The code is the  same except for three parameters:  
+> lab = c('')  
+
+This now gives R an empty list of names for the labels and so no label text appears.  
+
+> col=c('black', 'black', 'black', 'red3')  
+colAlpha = 1
+
+These two lines are new, with the first setting the colours for each class of data point. These colours are set as names and can be set as any colour that R recognises such as 'green', but will fail on a name like 'a pale greeny-blue'.  
+The _colAlpha = 1_ set the transparency of the data point with 1 drawing solid datapoints and 0.0 a transparent disc with 0.5 been the middle point.
+
+![Figure 10.1](images/VolcanoPlot_no_labels.png)
+
+Figure 10.1: The modified volcano plot
+
+In section [9. Principal Component Analysis (PCA) Visualisation](#9-principal-component-analysis-pca-visualisation) you draw a PCA plot where each sample had its own colour, the following code draws a PCA plot with the samples colour coded by its condition. Unlike when drawing volcano plot above, modifying the PCA plot requires a new code that uses the ggplot R package to draw the plot (Figure 10.2). Consequently, rather than getting the plotPCA function to draw the image as before, it is told to send all the raw data to a variable with this line:
+
+>pcaData <- plotPCA(nt, intgroup=c("condition", "sample"), returnData=TRUE) 
+
+The basic command is the same, but the  _returnData=TRUE_ parameter causes the raw data to be returned and stops the image from been drawn. In the new plot we will label the axis with the PCA1 and PCA2 percent value rather than the raw value which ranges from 0.0 to 1.0. This done with:
+
+> percentVar <- round(100 * attr(pcaData, "percentVar"))  
+
+The _attr(pcaData, "percentVar")_ code gets the _percentVar_ value from the variable holding the raw data (_pcaData_), which is then multiplied by 100 with the _100 *_ code. The round function then removes the decimal part of the value.
+
+The PNG file is opened, the image is drawn and then the file saved with: 
+
+> png("PCAPlot_plus.png")    
 ggplot(pcaData, aes(PC1, PC2, color=condition)) +  
   geom_point(size=3) +  
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +  
   ylab(paste0("PC2: ",percentVar[2],"% variance")) +   
   coord_fixed() +   
   ggtitle("PCA plot: condition")  
-dev.off()#
+dev.off()
 
+![Figure 10.2](images/PCAPlot_plus.png)
 
+Figure 10.2: The modified PCA plot.
 
-> if(!require("clusterProfiler", quietly = TRUE)){  
-  BiocManager::install(c("clusterProfiler", "enrichplot"), dependencies = TRUE, force = TRUE, lib = library)  
+The code is more complex than before and is built up with a series of appended instructions (each precedes a '+'). The basic graph is drawn with: 
+
+> ggplot(pcaData, aes(PC1, PC2, color=condition)) +
+
+The data is in the _pcaData_ variable, with the specific values referenced with the _PC1_ and _PC2_ text and the colour coding set to the sample's condition with _color=condition_. The '+' character instructions ggplot to add the following features to the image. 
+
+- _geom_point(size=3)_ sets the size of the data points.  
+- _xlab(paste0("PC1: ",percentVar[1],"% variance"))_ sets the x-axis label (PC1: 65% variance")  
+- _ylab(paste0("PC2: ",percentVar[2],"% variance"))_ sets the y-axis label (PC1: 16% variance")  
+- _coord_fixed()_ ensures equal scaling on the x and y axes.
+- _ggtitle("PCA plot: condition")_ sets the plot's title.
+
+## 11. Adding gene symbols to data files
+
+This step relies on the ClusterProfiler and org.Hs.eg.db R packages, the ClusterProfiler can be very difficult to install and so may fail completely!
+
+Install and load the packages as before:
+
+> if(!require("clusterProfiler")){  
+  BiocManager::install("clusterProfiler", lib = library)  
 }  
 library("clusterProfiler")  
 
 > if (!require(org.Hs.eg.db)) {  
-	BiocManager::install("org.Hs.eg.db")  
+                BiocManager::install("org.Hs.eg.db", lib = library)  
 }  
 library("org.Hs.eg.db")  
- 
 
-> toName <- as.data.frame(resSig)  
-toName$RefSeq<-rownames(toName)  
-head(toName)  
+Next you need to make a data frame from the filtered results that you saved to file earlier:
 
-> sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)    
-mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)    
-write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))  
+> toName <- as.data.frame(resSig)
+
+The GenBank/RefSeq names are used as the row names and have a version number which need to be removed with:
+
+> rownames(toName) <- gsub("\\..*", "", rownames(toName))
+
+These are then used to make fill the RefSeq column on the _toNames_ data frame with:
+
+> toName$RefSeq <- rownames(toName)
+
+The GenBank IDs are then used to obtain the gene symbols using the bitr function of ClusterProfiles with reference to the org.HS.eg.db which contains data on the human genome.
+
+sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.HS.eg.db)  
+
+A new data frame is made to which the correct gene symbol has been append to with:  
+
+> mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)
+
+It is then written to file with:
+
+> write.csv(mergeSig, file= "Results_with_names.csv")
