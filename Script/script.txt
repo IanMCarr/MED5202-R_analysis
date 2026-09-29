@@ -1,0 +1,145 @@
+
+# For this script to work you need to set the library and workFolder variables
+
+library <- "Your/library/folder"
+workFolder <- "your/MyWorkArea"
+
+library <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\R"
+.libPaths(library)
+
+
+# Installing Bioconductor's BiocManager and DESeq2
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+install.packages("BiocManager", lib = library)
+}
+library(BiocManager)
+
+if (!requireNamespace("DESeq2", quietly = TRUE)) {
+BiocManager::install(c("DESeq2", "GenomicRanges"), lib = library)
+}
+library(DESeq2)
+
+#Setting R's work folder
+dir.create(workFolder, recursive = TRUE, showWarnings = FALSE)
+setwd(workFolder)
+
+# making a variable that points to the read count file
+
+rSubReadFile <- file.path(workFolder, "gene_counts.txt")
+
+# Reading the read count file and prpepaing its data for use
+
+counts <- read.delim(rSubReadFile)
+columnsFromDataFile <- c(16, 17, 18, 19, 20, 21)
+counts <- as.matrix(counts[, columnsFromDataFile])
+storage.mode(counts) <- "integer"
+counts <- counts[rowSums(counts > 3) > 2, ]
+
+#Describing the samples and analysis
+
+groupsForEachSample <- c("siCK", "siCK", "siCK", "Control", "Control", "Control")
+sampleNames <- c("siCK4_1", "siCK4_2", "siCK4_3", "siNT3_1", "siNT3_2", "siNT3_3")
+conditionLevels <- c("Control", "siCK")
+sampleTable <- data.frame(sample = sampleNames, condition = groupsForEachSample)
+colnames(counts) <- sampleTable$sample
+rownames(sampleTable) <- sampleTable$sample
+
+#Setting up and prefoming the DESeq2 analysis
+
+dds <- DESeqDataSetFromMatrix(countData = counts, colData = sampleTable, design = ~ condition)
+dds$condition <- factor(dds$condition, levels = conditionLevels)
+mcols(dds)$gene <- rownames(counts)
+dds <- DESeq(dds)
+res <- results(dds)
+summary(res)
+
+#Filtering and saving data to file
+
+write.csv(as.data.frame(res), file = "standard_analysis_Deseq2.csv")
+resSig <- subset(res, padj < 0.05)
+write.csv(as.data.frame(resSig), file = "standard_analysis_Deseq2_significant_05.csv")
+
+#Creating the volcano plots
+
+if (!requireNamespace("EnhancedVolcano", quietly = TRUE)) {
+BiocManager::install("EnhancedVolcano", lib = library)
+}
+library(EnhancedVolcano)
+
+png("VolcanoPlot.png")
+EnhancedVolcano(
+res,
+lab = rownames(res),
+title = "siCK4 v control",
+subtitle = "DESeq2 Differential Expression",
+caption = bquote(~Log[2]~ "fold change cutoff: 2,
+padj cutoff: 0.05"),
+pCutoff = 0.05,
+FCcutoff = 1,
+x = "log2FoldChange",
+y = "padj"
+)
+dev.off()
+
+png("VolcanoPlot_no_labels.png")
+
+EnhancedVolcano(res,
+lab = c(''),
+title = "Volcano plot",
+subtitle = "DeSeq2 Differential expression",
+caption = bquote(~Log[2]~ "fold change cutoff: 2,
+padj -value cutoff: 0.05"),
+pCutoff = 0.05,
+FCcutoff = 1,
+x = 'log2FoldChange',
+y = 'padj',
+col=c('black', 'black', 'black', 'red3'),
+colAlpha = 1)
+
+dev.off()
+
+#Creating the heatmap
+
+if (!requireNamespace("pheatmap", quietly = TRUE)) {
+install.packages("pheatmap", lib = library)
+}
+library(pheatmap)
+
+select <- which(res$padj < 0.01)
+df <- as.data.frame(colData(dds)[, c("condition", "sample")])
+nt <- normTransform(dds)
+normcounts <- assay(nt)[select, ]
+
+png("Heatmap.png")
+
+pheatmap(
+normcounts,
+cluster_rows = TRUE,
+show_rownames = FALSE,
+cluster_cols = TRUE,
+annotation_col = df,
+scale = "row",
+main = "Differential expressed sequences"
+)
+
+dev.off()
+
+#Creating the PCA plots
+
+png("PCA.png")
+plotPCA(nt, intgroup = c("condition", "sample"))
+dev.off()
+
+pcaData <- plotPCA(nt, intgroup=c("condition", "sample"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+
+png("PCAPlot_plus.png")
+ggplot(pcaData, aes(PC1, PC2, color=condition)) +
+geom_point(size=3) +
+xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+coord_fixed() +
+ggtitle("PCA plot: condition")
+dev.off()
+
