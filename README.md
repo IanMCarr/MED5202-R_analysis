@@ -597,7 +597,9 @@ Next you need to make a data frame from the filtered results that you saved to f
 
 The GenBank/RefSeq names are used as the row names and have a version number which need to be removed with:
 
-> rownames(toName) <- gsub("\\..*", "", rownames(toName))
+> rownames(toName) <- gsub("\\\\..*", "", rownames(toName))
+
+This command, gsub looks at each row name of the toName data frame and finds the first period with "\\\\..*" and replaces all the text from the period with "" (i.e. no text).
 
 These are then used to make fill the RefSeq column on the _toNames_ data frame with:
 
@@ -605,7 +607,7 @@ These are then used to make fill the RefSeq column on the _toNames_ data frame w
 
 The GenBank IDs are then used to obtain the gene symbols using the bitr function of ClusterProfiles with reference to the org.HS.eg.db which contains data on the human genome.
 
-sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.HS.eg.db)  
+sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)  
 
 A new data frame is made to which the correct gene symbol has been append to with:  
 
