@@ -95,55 +95,27 @@ When you refer to a file or folder in text, R expects the names of folders and f
 
 
 ## 2. Downloading R packages
-The RNA-seq statistical analysis will be performed using DESeq2, which is an R package that is very much like a normal program running on Windows, except the package runs inside an R environment. Like any computer program, you need to tell the environment where to put its files. I use __“D:\\OneDrive - University of Leeds\\MyWorkArea\R”__, but this will only work for me, so you need to change this to the location of your R folder you made earlier. In this document and the script, this location will be referenced multiple times and so rather than type the folders location in multiple times you'll reference it with a variable called "__library__".
 
-A variable is a place in your computer's memory that is referenced by its name in a script. So __"library"__ (with speech marks) is just text and a program will see it as just text, but __library__ (without speech marks) is a variable's name and the script will look in your computer's memory for what it means/represent. Before you can use a variable you have to declare it. To declare variable that holds text you use:
-
-> _library_ \<- "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\R"    
-
-or   
-
-> _library_ = "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\\R" 
-
-If you now type:
-
-> _library_   
-
-and then press enter you'll get:
-
-> [1] "D:\\\\OneDrive - University of Leeds\\\\MyWorkArea\\\\R"
-
-Which is R telling you what is in the variable.
-
-Using the _library_ variable to set your library location use:  
-    
-> .libPaths(library)  
-
-___Note: Remember the note in section 1.4 about the slashes in a file's path.___
-
-There are a number of websites that distribute R packages, you will use Bioconductor, which is like an app store for bioinformatics R packages. To install packages from Bioconductor, you need to install BiocManager with the following commands:   
+There are a number of websites that distribute R packages, in this tutorial you will use Bioconductor, which is like an app store for bioinformatics R packages. To install packages from Bioconductor, you need to install BiocManager with the following commands:   
 
 > if (!requireNamespace("BiocManager", quietly = TRUE)) {    
-    install.packages("BiocManager", lib = library)    
+    install.packages("BiocManager")    
 }    
 library(BiocManager)
 
-__Note__ the use of the _library_ variable.    
-The statement after the ‘if’ checks whether BiocManager is already in the library folder. If it is, R does nothing. If it isn’t, R downloads all the required code and makes the package in your library folder. BiocManager is loaded for you to use with the library(BiocManager) command.
+The statement after the ‘if’ checks whether BiocManager is already in the library folder. If it is, R does nothing. If it isn’t, R downloads all the required code and makes the package in your library folder. BiocManager is loaded for you to use with the library(BiocManager) command.  
+
 Next you need to get the DESeq2 program using this set of commands:    
 
 > if (!requireNamespace("DESeq2", quietly = TRUE)) {  
-    BiocManager::install(c("DESeq2", "GenomicRanges"), lib =library)  
+    BiocManager::install(c("DESeq2", "GenomicRanges"))  
 }  
 library(DESeq2)  
 
-__Note__ the use of the _library_ variable. 
+As before, the statement after the ‘if’ checks if DESeq2 is already in the library folder. If it isn’t it the commands in the curly brackets runs, downloading and building DESeq2 in your R library folder. This step may take a while to run. 
 
-
-As before, the statement after the ‘if’ checks if DESeq2 is already in the library folder. If it isn’t it the commands in the curly brackets runs which downloads and builds DESeq2 in your R library folder.  
-If you look in the R library folder before executing these commands, the folder is empty. However, after the commands it will contain a DESeq2 folder plus all the other packages DESeq2 needs to work. This step may take a while to run. If you look in the ‘Packages’ tab of the lower left-hand panel (Figure 2.1), you should see DESeq2 along with it dependencies like GenomicRanges.
-To allow R to use DESeq2, you have to load it using the library(DESeq2)command. 
-library(DESeq2)
+If you look in the ‘Packages’ tab of the lower left-hand panel (Figure 2.1), you should see DESeq2 along with it dependencies like GenomicRanges appear.
+To allow R to use DESeq2, you have to load it using the _library(DESeq2)_ command. 
 
 ![Figure 2.1](images/Figure2.1.jpg)
 
@@ -159,31 +131,40 @@ where you substitute "your/MyWorkArea" with the location of the working folder y
 
 > workFolder <- "D:/OneDrive - University of Leeds/MyWorkArea"  
 
+___Remember___ The point in section 1.4 about the slash character in a folders path - When entering a file or folder's path use either a forward slash (__'/'__) or two back slashes (__'\\\\'__), not the single one suggested by a Windows PC.
+
 Once you have created this variable, typing its name and pressing ‘Enter’ instructs R to write the variables contents on the next line:  
 > workFolder  
 [1] "D:  /OneDrive - University of Leeds/MyWorkArea"  
 
-To set this location as the working environment, it’s a good idea to check that the folder exists, and if not, make it. This is done with this command:   
+The variable's ane and contents will also appear in the upper left-hand panel (Figure 3.1).
+
+![Figure 3.1](images/Figure4.1.jpg)
+
+Figure 3.1: The _workFolder_ variable is displayed in the upper left-hand panel (black box).
+
+To set this location as the working environment, it’s a good idea to check that the folder exists, and if not, make it. This is done with this command:  
+
 > dir.create(workFolder, recursive = TRUE, showWarnings = FALSE)  
 
-Notice the use of the workFolder variable. Once created, it is set to the working folder with:  
+Once the folder has been created, it is set as the working folder with:  
 
 >setwd(workFolder)  
 
 Now all the files will be created in this folder, unless if a specific location is set when creating it. 
 
-Finally, you need to reference the file that contains the red count data. This location is stored in the rSubReadFile variable with:  
+Finally, you need to reference the file that contains the read count data. This location is stored in the rSubReadFile variable with:  
 
 > rSubReadFile <- file.path(workFolder, "__gene_counts.txt__")
 
-Since the ‘__gene__counts_.txt__’ file is in the working folder, you can use’ file.path’ function to combine the two pieces of text.
+Since the ‘__gene__counts_.txt__’ file is in the working folder, you can use’ the file.path’ function to combine the two pieces of text.
 
 ## 4. Loading and Preparing the Count Data
 So far you have just set up the R environment, now you will actually do something, namely read the contents of the __gene__counts_.txt__ file into memory. This is done with:  
 
 > _counts_ <- read.delim(rSubReadFile)  
 
-Reading the data will take a moment and result in the creation of a new variable – _‘_counts_’_. This variable isn’t like the ones you have made so far, its data is stored as if it were an Excel spreadsheet – it has rows and columns. This type of variable is called a “Data Frame” and consequently, it is listed in a different part of the upper-hand panel (Figure 4.4). 
+Reading the data will take a moment and result in the creation of a new variable – ‘_counts_’. This variable isn’t like the ones you have made so far, its data is stored as if it were an Excel spreadsheet – it has rows and columns. This type of variable is called a “Data Frame” and consequently, it is listed in a different part of the upper-hand panel (Figure 4.4). 
 
 ![Figure 4.1](images/Figure4.1.jpg)
 
@@ -198,7 +179,7 @@ Figure 4.2: Double-clicking on a complex variable will open it in the upper half
 
 ---
 
-If you look at it, you’ll see that it contains a lot of data that you don’t need, such as the genomic coordinates of each transcript’s exons, as well as data for samples you will not use. The data columns you need are 16, 17, 18, 19, 20 and 20. However, if you visualize the variable by double clicking it in the upper left-hand panel and count the columns, it may appear the numbers are out by 1. This because the first column in the view is the name name just by R to reference each row and is a data column. This filtering is done with this command: 
+If you look at it, you’ll see that it contains a lot of data that you don’t need, such as the genomic coordinates of each transcript’s exons, as well as data for samples you will not use. The data columns you need are 16, 17, 18, 19, 20 and 20. However, if you visualize the variable by double clicking it in the upper left-hand panel and count the columns, it may appear the numbers are out by 1. This because the first column in the view is the name name used by R to reference each row and is not a data column. The filtering is done with this command: 
 
 > columnsFromDataFile <- c(16, 17, 18, 19, 20, 21)
 
@@ -213,7 +194,7 @@ If you want to reference the third value (remember to count from 0), you type:
 [1] 16
 
 __Notice:__ you type the variable’s name and then the ‘index’ you want inside square brackets.  
-Unfortunately, DESeq2 wants the data as a matrix and not a data frame. A matrix is similar to a dataframe, but is doesn't come with a lot of helpful features as a dataframe. To convert _counts_ to a matrix you filter use this command:  
+Unfortunately, DESeq2 wants the data as a matrix and not a data frame. A matrix is similar to a data frame, but is doesn't come with a lot of helpful features as a data frame. To convert _counts_ to a matrix you filter use this command:  
 
 > _counts_ <- as.matrix(_counts_[, columnsFromDataFile])  
 
@@ -242,10 +223,10 @@ When analysing read count data, many sequences have very few read reads as they 
 
 > counts <- counts[rowSums(counts > 3) > 2, ]  
 
-The rowSums(counts > 3) determines how many samples have more than 3 reads mapping to a sequence. If more than 2 do (rowSums(counts_> 3) > 2) directs R to keep that sequence’s data, if not that sequence’s data is removed from the dataset. Before running the command, the _counts_ matrix had 544,674 data points (see the text after the _counts_ variables name in the upper righthand panel), after the command it has 208,650.
+The "rowSums(counts > 3)" determines which samples have more than 3 reads mapping to a sequence. If more than 2 do "(rowSums(counts_> 3) > 2)" directs R to keep that sequence’s data, if not that sequence’s data is removed from the dataset. Before running the command, the _counts_ matrix had 544,674 data points (see the text after the _counts_ variables name in the upper righthand panel), after the command it has 208,650.
 
 ## 5. Experimental Design Setup
-So far you have loaded and organised the data in your PC’s memory. Now you need to describe the data so DESeq2 knows how to analyse it. This is done by creating a series of variables and then combining them to form a sample table. The first thing to do is state what type of sample each column in _counts_ represents (control data or siCK4 knockdown). This is done by making this vector:  
+So far you have loaded and organised the data in your PC’s memory. Now you need to describe the data so DESeq2 knows how to analyse it. This is done by creating a series of variables and then combining them to form a "sample table". The first thing to do is state what type of sample each column in _counts_ represents (control data or siCK4 knockdown data). This is done by making this vector:  
 
 > groupsForEachSample <- c("siCK", "siCK", "siCK", "Control", "Control", "Control")  
 
@@ -360,7 +341,7 @@ write.csv(as.data.frame(resSig), file = "standard_analysis_Deseq2_significant_05
 While you have now completed the differential expression analysis, it is standard practice to produce some pictures that summarise the results. One type of graphic is the volcano plot, which graphs the sequences’ p-value against their change in expression. A widely used package for drawing volcano plots in R is the EnhancedVolcano package. This is downloaded from Bioconductor in the same way you got the DESeq2 package:  
 
 >if (!requireNamespace("EnhancedVolcano", quietly = TRUE)) {  
-    BiocManager::install("EnhancedVolcano", lib = library)  
+    BiocManager::install("EnhancedVolcano")  
 }  
 library(EnhancedVolcano)  
 
@@ -430,7 +411,7 @@ The nt variable contains the normalised data of all sequence, which is then filt
 Now you have the data, you can download the pheatmap package which will draw the heatmap.  
 
 >if (!requireNamespace("pheatmap", quietly = TRUE)) {  
-    install.packages("pheatmap", lib = library)  
+    install.packages("pheatmap")  
 }  
 library(pheatmap)  
 
@@ -584,12 +565,12 @@ This step relies on the ClusterProfiler and org.Hs.eg.db R packages, the Cluster
 Install and load the packages as before:
 
 > if(!require("clusterProfiler")){  
-  BiocManager::install("clusterProfiler", lib = library)  
+  BiocManager::install("clusterProfiler")  
 }  
 library("clusterProfiler")  
 
 > if (!require(org.Hs.eg.db)) {  
-    BiocManager::install("org.Hs.eg.db", lib = library)  
+    BiocManager::install("org.Hs.eg.db")  
 }  
 library("org.Hs.eg.db")  
 
