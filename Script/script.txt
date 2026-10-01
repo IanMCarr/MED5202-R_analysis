@@ -1,23 +1,20 @@
 
 # For this script to work you need to set the library and workFolder variables
 
-library <- "Your/library/folder"
 workFolder <- "your/MyWorkArea"
 
-library <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\R"
-workFolder <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\R"
-.libPaths(library)
 
+workFolder <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\"
 
 # Installing Bioconductor's BiocManager and DESeq2
 
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
-install.packages("BiocManager", lib = library)
+install.packages("BiocManager")
 }
 library(BiocManager)
 
 if (!requireNamespace("DESeq2", quietly = TRUE)) {
-BiocManager::install(c("DESeq2", "GenomicRanges"), lib = library)
+BiocManager::install(c("DESeq2", "GenomicRanges"))
 }
 library(DESeq2)
 
@@ -64,7 +61,7 @@ write.csv(as.data.frame(resSig), file = "standard_analysis_Deseq2_significant_05
 #Creating the volcano plots
 
 if (!requireNamespace("EnhancedVolcano", quietly = TRUE)) {
-BiocManager::install("EnhancedVolcano", lib = library)
+BiocManager::install("EnhancedVolcano")
 }
 library(EnhancedVolcano)
 
@@ -103,7 +100,7 @@ dev.off()
 #Creating the heatmap
 
 if (!requireNamespace("pheatmap", quietly = TRUE)) {
-install.packages("pheatmap", lib = library)
+install.packages("pheatmap")
 }
 library(pheatmap)
 
@@ -144,6 +141,7 @@ coord_fixed() +
 ggtitle("PCA plot: condition")
 dev.off()
 
+#Adding gene symbol ids to the exported results file with ClusterProfiler and org.Hs.eg.db
 
 if(!require("clusterProfiler")){
   BiocManager::install("clusterProfiler")
@@ -164,3 +162,29 @@ toName$RefSeq<-rownames(toName)
 sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)
 mergeSig <- merge(toName, sigNames, by.x="RefSeq", by.y="REFSEQ", all.x=TRUE, all.y=FALSE)
 write.csv(mergeSig, file= paste(fileBaseName,"standard_analysis_sig_Deseq2_names.csv", sep="_"))
+
+#Adding gene symbol ids to the exported results file with BiomaRt
+
+if(!require("biomaRt")){
+  BiocManager::install("biomaRt")
+}
+library("biomaRt")
+
+mart <- useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", mirror = "uswest")
+
+toName <- as.data.frame(resSig)
+rownames(toName) <- gsub("\\..*", "", rownames(toName))
+toName$RefSeq<-rownames(toName)
+
+sigNames <- getBM(
+  attributes = c("refseq_mrna", "hgnc_symbol"),
+  filters = "refseq_mrna",
+  values = rownames(toName),
+  mart = mart
+)
+
+colnames(sigNames)
+
+
+mergeSig_Bio <- merge(toName, sigNames, by.x="RefSeq", by.y="refseq_mrna", all.x=TRUE, all.y=FALSE)
+write.csv(mergeSigBio, file= paste(fileBaseName,"standard_analysis_Deseq2_significant_05_names_Bio", sep="_"))

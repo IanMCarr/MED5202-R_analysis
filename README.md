@@ -198,7 +198,7 @@ Figure 4.2: Double-clicking on a complex variable will open it in the upper half
 
 ---
 
-If you look at it, you’ll see that it contains a lot of data that you don’t need, such as the genomic coordinates of each transcript’s exons, as well as data for samples you will not use. The data columns you need are 17, 18, 19, 20, 21 and 21. However, in computing you count from 0 and not 1, so the columns you need to tell R to keep are 16, 17, 18, 19, 20 and 21. This filtering is done with this command: 
+If you look at it, you’ll see that it contains a lot of data that you don’t need, such as the genomic coordinates of each transcript’s exons, as well as data for samples you will not use. The data columns you need are 16, 17, 18, 19, 20 and 20. However, if you visualize the variable by double clicking it in the upper left-hand panel and count the columns, it may appear the numbers are out by 1. This because the first column in the view is the name name just by R to reference each row and is a data column. This filtering is done with this command: 
 
 > columnsFromDataFile <- c(16, 17, 18, 19, 20, 21)
 
@@ -577,6 +577,8 @@ The data is in the _pcaData_ variable, with the specific values referenced with 
 
 ## 11. Adding gene symbols to data files
 
+### 11.1 Using ClusterProfiler and org.Hs.eg.db
+
 This step relies on the ClusterProfiler and org.Hs.eg.db R packages, the ClusterProfiler can be very difficult to install and so may fail completely!
 
 Install and load the packages as before:
@@ -587,7 +589,7 @@ Install and load the packages as before:
 library("clusterProfiler")  
 
 > if (!require(org.Hs.eg.db)) {  
-                BiocManager::install("org.Hs.eg.db", lib = library)  
+    BiocManager::install("org.Hs.eg.db", lib = library)  
 }  
 library("org.Hs.eg.db")  
 
@@ -607,7 +609,7 @@ These are then used to make fill the RefSeq column on the _toNames_ data frame w
 
 The GenBank IDs are then used to obtain the gene symbols using the bitr function of ClusterProfiles with reference to the org.HS.eg.db which contains data on the human genome.
 
-sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)  
+> sigNames <- bitr(geneID=rownames(toName), fromType = "REFSEQ", toType = "SYMBOL", OrgDb = org.Hs.eg.db)  
 
 A new data frame is made to which the correct gene symbol has been append to with:  
 
@@ -616,3 +618,63 @@ A new data frame is made to which the correct gene symbol has been append to wit
 It is then written to file with:
 
 > write.csv(mergeSig, file= "Results_with_names.csv")
+
+### 11.2 Using BiomaRt
+
+This package is easier to install than ClusterProfiler, but still may be an issue.
+
+The package is installed and loaded like the others with:
+
+>if(!require("biomaRt")){  
+  BiocManager::install("biomaRt")  
+}  
+library("biomaRt")  
+
+A connection is made to an external data source with: 
+
+> mart <- useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", mirror = "uswest")
+
+The connection is made to a mirror site 'uswest' rather than Ensembl since Ensembl reconfigured their webservices in a many that blockeds biomaRt. At sompoint, biomaRt will be updated and so the _mirror = "uswest"_ parameter will not be required.
+
+As with the pervious method, you need to make a data frame from the filtered results that you saved to file earlier:
+
+> toName <- as.data.frame(resSig)
+
+The GenBank/RefSeq names are used as the row names and have a version number which need to be removed with:
+
+> rownames(toName) <- gsub("\\\\..*", "", rownames(toName))
+
+This command, gsub looks at each row name of the toName data frame and finds the first period with "\\\\..*" and replaces all the text from the period with "" (i.e. no text).
+
+e.g. _NM_2938372.3_ becomes _NM_2938372_.
+
+These are then used to make fill the RefSeq column on the _toNames_ data frame with:
+
+> toName$RefSeq <- rownames(toName)
+
+A dataset (sigNames) that links the GenBank ID's to a gene symbol is made with this command:
+
+>sigNames <- getBM(  
+  attributes = c("refseq_mrna", "hgnc_symbol"),  
+  filters = "refseq_mrna",  
+  values = rownames(toName),  
+  mart = mart  
+)  
+
+The command uses the getBM function to return the gene annotation with the parameters described below:
+
+|Parameter|Description|
+|-|-|
+|attributes = c("refseq_mrna", "hgnc_symbol")|Names the sigNames columns and defines the data it contains.|
+|filters = "refseq_mrna"|Described the format of the transcript IDs used in the query|
+|values = rownames(toName)|Supplies the function with the list of ID, in this case the row names of the toName data frame.|
+|mart = mart|Gives the getBM the connection to the external data source|
+
+
+The sigNames variable is then used to create a new column on the toName variable that contains the gene symbol for each transcript, this do with:
+
+> mergeSig_Bio <- merge(toName, sigNames, by.x="RefSeq", by.y="refseq_mrna", all.x=TRUE, all.y=FALSE)  
+
+And the data is written to file with: 
+
+> write.csv(mergeSigBio, file= paste(fileBaseName,"standard_analysis_Deseq2_significant_05_names_Bio", sep="_"))
