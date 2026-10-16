@@ -3,9 +3,6 @@
 
 workFolder <- "your/MyWorkArea"
 
-
-workFolder <- "D:\\OneDrive - University of Leeds\\MyWorkArea\\"
-
 # Installing Bioconductor's BiocManager and DESeq2
 
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
