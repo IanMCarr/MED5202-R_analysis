@@ -1,4 +1,4 @@
-# MED5202-Tut
+# MED5202-R_analysis
 ## Bioinformatics for MED5202 - RNAseq analysis
 
 ## Introduction
